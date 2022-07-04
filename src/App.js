@@ -1,8 +1,10 @@
 import './index.css';
-import ProductForm from './components/ProductForm';
+import Dashboard from './components/Dashboard'
 function App() {
   return (
-    <ProductForm/>
+    <>
+      <Dashboard />
+    </>
   );
 }
 
