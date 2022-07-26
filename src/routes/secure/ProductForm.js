@@ -331,8 +331,8 @@ function ProductForm() {
 
 
    return (
-      <div className="w-full flex justify-center justify-items-center">
-         <form className="bg-white shadow-md rounded px-5 py-6 mb-4 max-w-2xl">
+      <div className="w-full bg-white dark:bg-slate-500  justify-center justify-items-center">
+         <form className="bg-white shadow-md rounded px-5 py-6 my-4 mx-auto max-w-2xl">
             <h1 className="text-xl text-gray-700 mb-6 font-semibold">Add New Product</h1>
             <label>Product Name</label>
             <input type="text"
@@ -519,8 +519,8 @@ function ProductForm() {
                   onChange={handleChange}
                   placeholder={`Price/${formData.quantityScale}`}
                />
+               <button className="bg-gray-700 hover:bg-blue-600 text-white font-semibold my-10 float-right py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={event => handleSubmit(event)}>Add to list</button>
             </fieldset>
-            <button className="bg-gray-700 hover:bg-blue-600 text-white font-semibold my-10 float-right py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={event => handleSubmit(event)}>Add to list</button>
          </form >
       </div >
    );
