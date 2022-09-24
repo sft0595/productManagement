@@ -5,7 +5,7 @@ import { Navmenu } from "./Navmenu"
 let navOpts = Navmenu()
 
 function Dashboard() {
-   const [isCollapse, setIsCollapse] = React.useState(false)
+   const [isCollapse, setIsCollapse] = React.useState(true)
 
    const handleSubmenu = (event) => {
       event.stopPropagation()
@@ -26,7 +26,7 @@ function Dashboard() {
    return (
       <>
          <div className=" bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-            <div className={`${isCollapse ? " w-20" : " w-60"} duration-500 min-h-screen border-r border-r-white`}>
+            <div className={`${isCollapse ? " w-20" : " w-60"} duration-500 min-h-screen `}>
                <button className="bg-none p-2 w-full flex justify-center" onClick={() => setIsCollapse(!isCollapse)}>
                   <FaArrowLeft className={`${isCollapse ? " rotate-180" : ""} duration-500`} />
                </button>
