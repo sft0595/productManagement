@@ -1,55 +1,23 @@
 import React from "react";
+import axios from "axios";
 function ProductForm() {
-   const [featuresData, setFeaturesData] = React.useState([])
-   const [sizesData, setSizesData] = React.useState([])
-   const [isSize, setIsSize] = React.useState(false)
-   const [vendorData, setVendorData] = React.useState([])
-   const [isQuantity, setIsQuantity] = React.useState(false)
-   const [isColor, setIsColor] = React.useState(false)
-   const [isFeature, setIsFeature] = React.useState(false)
+   const [categoriesData, setCategoriesData] = React.useState([])
+   const [categoryCrumbs] = React.useState([])
+   const [attributesData, setAttributesData] = React.useState([{ attribute: "", values: [] }])
+   const [featuresData, setFeaturesData] = React.useState([{ feature: "", featureDesc: "" }])
    const [isVendor, setIsVendor] = React.useState(false)
-
+   const [vendorData, setVendorData] = React.useState([])
    const [formData, setFormData] = React.useState({
-      prodName: "",
-      prodDesc: "",
-      prodBrand: "",
-      prodCat: "",
-      prodSubcat: "",
+      name: "",
+      meta_description: "",
+      brand: "",
+      category: "",
+      attrvalues: "",
       features: "",
-      sizes: [],
       vendorDetails: "",
       quantityScale: "",
       totalQuantity: "",
-      costPrice: "",
-      sellPrice: ""
    })
-
-   const sizeOptions = [
-      {
-         label: "-- Add Size -- ",
-         value: "",
-      },
-      {
-         label: "XXL",
-         value: "xxl",
-      },
-      {
-         label: "XL",
-         value: "xl",
-      },
-      {
-         label: "L",
-         value: "l",
-      },
-      {
-         label: "M",
-         value: "m",
-      },
-      {
-         label: "S",
-         value: "s",
-      },
-   ];
 
    const quantityScale = [
       {
@@ -66,30 +34,62 @@ function ProductForm() {
       },
    ];
 
-   //addinf input fields
-   const handleSizeInput = (event) => {
-      setIsSize(!isSize)
-      setSizesData([])
-   }
-
-   const handleQuantityInput = (event) => {
-      setIsQuantity(!isQuantity)
-      setSizesData([])
-   }
-
-   const handleColorInput = (event) => {
-      setIsColor(!isColor)
-      setSizesData([])
-   }
-
-   const handleFeatureInput = (event) => {
-      setIsFeature(!isFeature)
-      setFeaturesData([])
-   }
-
-   const handleVendorInput = () => {
+   const handleVendorInput = (event) => {
       setIsVendor(!isVendor)
-      setVendorData([])
+   }
+
+   const createCrumbs = (event) => {
+      let element = [...categoryCrumbs]
+      element = event.target.options[event.target.selectedIndex].text
+      categoryCrumbs.push(element);
+   }
+
+   // getting the categories from the api
+   React.useEffect(() => {
+      axios.get("http://127.0.0.1:8000/api/categories")
+         .then((response) => {
+            setCategoriesData(response.data);
+         })
+         .catch(console.log)
+   }, [])
+
+   // getting subcategeories on category change
+   React.useEffect(() => {
+      if (formData.category.length > 0) {
+         axios.get(`http://127.0.0.1:8000/api/category_desc/${formData.category}`)
+            .then((response) => {
+               setCategoriesData(response.data);
+            })
+            .catch(console.log)
+      }
+   }, [formData.category])
+
+   // setting attribute values for each attributes
+   const attrValuePush = (index, event) => {
+      const { name, value } = event.target
+      const newData = [...attributesData]
+      if (event.key === 'enter' || event.keyCode === 13) {
+         if (!newData[index][name].includes(value.toLowerCase())) {
+            newData[index][name].push(value.toLowerCase())
+         }
+         event.target.value = ''
+      }
+      setAttributesData(newData)
+   }
+
+   // attribute assigning for variations
+   const handleAttributeValueDel = (idx, index) => {
+      let name = "values"
+      const newData = [...attributesData]
+      newData[index][name].splice(idx, 1)
+      setAttributesData(newData)
+   }
+   const handleAttributesChange = (index, event) => {
+      const { name, value } = event.target
+      const newData = [...attributesData]
+      newData[index][name] = value
+      setAttributesData(newData)
+      setFormData(prevData => ({ ...prevData, attrvalues: attributesData }))
    }
 
    // features input handling and assigning it to formData
@@ -100,16 +100,6 @@ function ProductForm() {
       setFeaturesData(newData)
       setFormData(prevData => ({ ...prevData, features: featuresData }))
    }
-
-   // sizes input handling and assigning it to formData
-   const handleSizesChange = (index, event) => {
-      const { name, value } = event.target
-      const newData = [...sizesData]
-      newData[index][name] = value
-      setSizesData(newData)
-      setFormData(prevData => ({ ...prevData, sizes: sizesData }))
-   }
-
 
    // vendor input handling and assigning it to formData
    const handleVendorChange = (index, event) => {
@@ -132,53 +122,8 @@ function ProductForm() {
       )
    }
 
-
-
+   // for custom user included fields for the product
    const customInputs = () => {
-      if (!isSize && isQuantity && isColor) {
-         if (sizesData.length !== 0) {
-            if (sizesData.map(prevData => 'sizeNumber' in prevData && 'sizeColor' in prevData))
-               setSizesData(sizesData.map(prevData => prevData))
-         } else {
-            setSizesData([...sizesData, { sizeNumber: "", sizeColor: "" }])
-         }
-      }
-      else if (!isQuantity && isSize && isColor) {
-         if (sizesData.length !== 0) {
-            if (sizesData.map(prevData => 'sizeLabel' in prevData && 'sizeColor' in prevData))
-               setSizesData(sizesData.map(prevData => prevData))
-         } else {
-            setSizesData([...sizesData, { sizeLabel: "", sizeColor: "" }])
-         }
-      }
-      else if (!isColor && isSize && isQuantity) {
-         if (sizesData.length !== 0) {
-            if (sizesData.map(prevData => 'sizeLabel' in prevData && 'sizeNumber' in prevData))
-               setSizesData(sizesData.map(prevData => prevData))
-         } else {
-            setSizesData([...sizesData, { sizeLabel: "", sizeNumber: "" }])
-         }
-      }
-      else if (isSize && isQuantity && isColor) {
-         if (sizesData.length !== 0) {
-            setSizesData(sizesData.map(prevData => prevData))
-         } else {
-            setSizesData([...sizesData, { sizeLabel: "", sizeNumber: "", sizeColor: "" }])
-         }
-      } else {
-         setSizesData([])
-      }
-
-      if (isFeature) {
-         if (featuresData.length !== 0) {
-            setFeaturesData(featuresData.map(prevData => prevData))
-         } else {
-            setFeaturesData([...featuresData, { feature: "", featureDesc: "" }])
-         }
-      } else {
-         setFeaturesData([])
-      }
-
       if (isVendor) {
          if (vendorData.length !== 0) {
             setVendorData(vendorData.map(prevData => prevData))
@@ -191,33 +136,10 @@ function ProductForm() {
    }
 
 
-
-
-   // feature field increment
-   const addFeatureField = () => {
-      if (isFeature)
-         setFeaturesData([...featuresData, { feature: "", featureDesc: "" }])
-      else
-         setFeaturesData([])
+   // add and delete attributes fields 
+   const addAttributeField = () => {
+      setAttributesData([...attributesData, { attribute: "", values: [] }])
    }
-   // size, quantity, color field increment 
-   const addSizeField = () => {
-      if (!isSize && isQuantity && isColor) {
-         setSizesData([...sizesData, { sizeNumber: "", sizeColor: "" }])
-      }
-      else if (!isQuantity && isSize && isColor) {
-         setSizesData([...sizesData, { sizeLabel: "", sizeColor: "" }])
-      }
-      else if (!isColor && isSize && isQuantity) {
-         setSizesData([...sizesData, { sizeLabel: "", sizeNumber: "" }])
-      }
-      else if (isSize && isQuantity && isColor) {
-         setSizesData([...sizesData, { sizeLabel: "", sizeNumber: "", sizeColor: "" }])
-      } else {
-         setSizesData([])
-      }
-   }
-
    const delFeatureField = (event, index) => {
       event.preventDefault();
       const values = [...featuresData]
@@ -225,15 +147,56 @@ function ProductForm() {
       setFeaturesData(values)
       setFormData(prevData => ({ ...prevData, features: values }))
    }
-
-   const delSizeField = (event, index) => {
-      event.preventDefault();
-      const values = [...sizesData]
-      values.splice(index, 1)
-      setSizesData(values)
-      setFormData(prevData => ({ ...prevData, sizes: values }))
-
+   // add and delete feature field increment
+   const addFeatureField = () => {
+      setFeaturesData([...featuresData, { feature: "", featureDesc: "" }])
    }
+   const delAttributeField = (event, index) => {
+      event.preventDefault();
+      const values = [...attributesData]
+      values.splice(index, 1)
+      setAttributesData(values)
+      setFormData(prevData => ({ ...prevData, attrvalues: values }))
+   }
+
+   // creating attribute field elements
+   const attributeElems = attributesData.map((oldfields, index) =>
+   (
+      <div key={index}>
+         <div className=" bg-slate-200">
+            <h3 className=" font-semibold px-2">{`${oldfields.attribute} `}</h3>
+            {oldfields.values.map((tag, idx) =>
+               <label key={idx} className=" inline-block px-2 m-1 bg-slate-300">{` ${tag} `}
+                  <span className="color-red cursor-pointer" onClick={event => handleAttributeValueDel(event, idx, index)}>✖</span></label>)}
+         </div>
+         <input type='text'
+            name="attribute"
+            value={oldfields.attribute}
+            onChange={event => handleAttributesChange(index, event)}
+            placeholder="Eg. Color" className="shadow appearance-none border rounded w-4/12 mb-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline" />
+
+         <input type='text'
+            name="values"
+            onKeyDown={event => attrValuePush(index, event)}
+            // onChange={event => attrValueAddjust(index, event)}
+            placeholder="Eg. red green white black" className="shadow appearance-none border rounded w-7/12 mb-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline" />
+
+         {index === 0 && <input
+            value="+"
+            type="button"
+            className="w-1/12 bg-gray-100 hover:bg-gray-300 text-gray-500 py-2 px-3 shadow appearance-none border rounded focus:outline-none"
+            onClick={event => addAttributeField(event, index)}
+         />}
+         {index > 0 && <input
+            value="-"
+            type="button"
+            className="w-1/12 bg-gray-100 hover:bg-gray-300 text-gray-500 py-2 px-3 shadow appearance-none border rounded focus:outline-none"
+            onClick={event => delAttributeField(event, index)}
+         />}
+         <br></br>
+      </div>
+   )
+   )
 
    // creating feature field elements
    const featureElems = featuresData.map((oldfields, index) =>
@@ -251,55 +214,22 @@ function ProductForm() {
             onChange={event => handleFeaturesChange(index, event)}
             placeholder="Description" className="shadow appearance-none border rounded w-7/12 mb-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline" />
 
-         <input
+         {index === 0 && <input
+            value="+"
+            type="button"
+            className="w-1/12 bg-gray-100 hover:bg-gray-300 text-gray-500 py-2 px-3 shadow appearance-none border rounded focus:outline-none"
+            onClick={event => addFeatureField(event, index)}
+         />}
+         {index > 0 && <input
             value="-"
             type="button"
             className="w-1/12 bg-gray-100 hover:bg-gray-300 text-gray-500 py-2 px-3 shadow appearance-none border rounded focus:outline-none"
             onClick={event => delFeatureField(event, index)}
-         />
+         />}
       </div>
    )
    )
-
-
-   // creating size field elements
-   const sizeElems = sizesData.map((oldsizes, index) =>
-   (
-      <div key={index}>
-         {isSize ? <select
-            name="sizeLabel"
-            className="w-3/12 shadow appearance-none border rounded mb-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
-            value={oldsizes.sizeLabel}
-            onChange={event => handleSizesChange(index, event)}
-         >
-
-            {sizeOptions.map((option, index) => (
-               <option value={option.value} key={index} disabled={formData.sizes.map(x => x.sizeLabel).includes(option.value)}>{option.label}</option>
-            ))}
-         </select> : ""}
-
-         {isQuantity ? <input type='text'
-            name="sizeNumber"
-            value={oldsizes.sizeNumber}
-            onChange={event => handleSizesChange(index, event)}
-            placeholder="Quantity" className="shadow appearance-none border rounded w-4/12 mb-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline" /> : ""}
-
-         {isColor ? <input type='text'
-            name="sizeColor"
-            value={oldsizes.sizeColor}
-            onChange={event => handleSizesChange(index, event)}
-            placeholder="Color" className="shadow appearance-none border rounded w-4/12 mb-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline" /> : ""}
-         <input
-            value="-"
-            type="button"
-            className="w-1/12 bg-gray-100 hover:bg-gray-300 text-gray-500 py-2 px-3 shadow appearance-none border rounded focus:outline-none"
-            onClick={event => delSizeField(event, index)}
-         />
-      </div >
-   )
-   )
-
-   // creating feature field elements
+   // creating vendor field elems
    const vendorElems = vendorData.map((oldfields, index) =>
    (
       <div key={index}>
@@ -322,100 +252,88 @@ function ProductForm() {
    )
    )
 
-
    // form submission handle
    const handleSubmit = (event) => {
       event.preventDefault();
       console.log(formData)
    }
 
-
+   // main for starts from here..........
    return (
-      <div className="w-full bg-white dark:bg-slate-500  justify-center justify-items-center">
+      < div className="w-full bg-white dark:bg-slate-500  justify-center justify-items-center" >
          <form className="bg-white shadow-md rounded px-5 py-6 my-4 mx-auto max-w-2xl">
             <h1 className="text-xl text-gray-700 mb-6 font-semibold">Add New Product</h1>
             <label>Product Name</label>
             <input type="text"
                placeholder="Product Name"
-               name="prodName"
+               name="name"
                className="shadow appearance-none border rounded w-full my-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
-               value={formData.prodName}
+               value={formData.name}
                onChange={handleChange} />
 
 
             <label>Product Description</label>
             <textarea
                placeholder="Product Description"
-               name="prodDesc"
+               name="meta_description"
                className="shadow appearance-none border rounded w-full my-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
-               value={formData.prodDesc}
+               value={formData.meta_description}
                onChange={handleChange}
                rows="10"
             />
+            {categoryCrumbs.length > 0 && <><b>Adding product to: </b><br></br></>}
+            {categoryCrumbs.map((crumb, index) =>
+               <li key={index} className="inline-flex items-center">
+                  <div className="flex items-center text-gray-400">
+                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"></path></svg>
+                     {crumb}
+                  </div>
+               </li>)}
+            <br></br>
+            {categoriesData.length > 0 &&
+               <select
+                  name="category"
+                  className="w-full shadow appearance-none border rounded my-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
+                  value={formData.category}
+                  onChange={(event) => { handleChange(event); createCrumbs(event) }}
+               >
+                  <option>{formData.category.length === 0 ? "--Category--" : "--Subcategory--"} </option>
+                  {categoriesData.map(root => <option key={root.id} value={root.id}>{root.title}</option>)}
+               </select>
+            }
+            <a href="cc.cp" className=" link-primary">Add new category</a><br></br>
+            <hr></hr>
+            <br></br>
 
+            <label>Select brand</label>
             <select
-               name="prodCat"
-               className="w-6/12 shadow appearance-none border rounded my-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
-               value={formData.prodCat}
-               onChange={handleChange}
-            >
-               <option value="">-- Choose Category --</option>
-               <option value="Apparels">Apparels</option>
-               <option value="Accessories">Accessories</option>
-               <option value="Electronics">Electronics</option>
-               <option value="Computer Components">Computer Components</option>
-            </select>
-
-            <select
-               name="prodSubcat"
-               className="shadow appearance-none border rounded w-6/12 my-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
-               value={formData.prodSubcat}
-               onChange={handleChange}
-            >
-               <option value="">-- Choose Category --</option>
-               <option value="Apparels">Apparels</option>
-               <option value="Accessories">Accessories</option>
-               <option value="Electronics">Accessories</option>
-               <option value="Computer Components">Accessories</option>
-            </select>
-
-            <label>Select Brand</label>
-            <select
-               name="prodBrand"
+               name="brand"
                className="shadow appearance-none border rounded w-full my-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
-               value={formData.prodBrand}
+               value={formData.brand}
                onChange={handleChange}
             >
-               <option value="">-- Choose Brand --</option>
+               <option value="">-- Choose brand --</option>
                <option value="AMD">AMD</option>
                <option value="Intel">Intel</option>
                <option value="Dastoor">Dastoor</option>
             </select>
 
-            {featureElems.length > 0 && <fieldset className="mt-5 py-4 border-b-2 border-gray-100">
-               <legend>Product Feature</legend>
-               {featureElems}
-               <input
-                  value="Add More"
-                  type="button"
-                  className="float-right text-sm bg-gray-100 hover:bg-gray-300 text-gray-500 py-2 px-3 shadow appearance-none border rounded focus:outline-none"
-                  onClick={(event) => addFeatureField(event)}
-               />
-            </fieldset>}
+            {
 
-            {sizeElems.length > 0 &&
-               <fieldset className="mt-5 py-4 border-b-2 border-gray-100">
-                  <legend>Product {isSize ? "Sizes |" : ""} {isQuantity ? "Quantities |" : ""} {isColor ? "Colors |" : ""}</legend>
-                  {sizeElems}
-                  <input
-                     value="Add More"
-                     type="button"
-                     className="float-right text-sm bg-gray-100 hover:bg-gray-300 text-gray-500 py-2 px-3 shadow appearance-none border rounded focus:outline-none"
-                     onClick={(event) => addSizeField(event)}
-                  />
-               </fieldset>}
+               attributeElems.length > 0 && <fieldset className="mt-5 py-4 border-b-2 border-gray-100">
+                  <legend>Attribute: <small>(Product variations depend on multiple attribute)</small></legend>
+                  {attributeElems}
+               </fieldset>
+            }
+            {
+               featureElems.length > 0 && <fieldset className="mt-5 py-4 border-b-2 border-gray-100">
+                  <legend>Product Feature</legend>
+                  {featureElems}
+               </fieldset>
+            }
 
-            {vendorElems.length > 0 &&
+            {
+               vendorElems.length > 0 &&
                <fieldset className="mt-5 py-4 border-b-2 border-gray-100">
                   <legend>Vendor Details</legend>
                   {vendorElems}
@@ -439,36 +357,16 @@ function ProductForm() {
                         <h2 className="m-2  mb-0 font-bold text-gray-500 w-full">Single input</h2>
                         <div className="flex w-full">
                            <div className="p-2">
-                              <input type="checkbox" name="addFeatureInput" id="addFeatureInput" onChange={event => handleFeatureInput(event)} checked={isFeature} />
-                              <label htmlFor="addFeatureInput" className="cursor-pointer"> Feature</label>
-                           </div>
-                           <div className="p-2">
                               <input type="checkbox" name="addVendorInput" id="addVendorInput" onChange={event => handleVendorInput(event)} checked={isVendor} />
                               <label htmlFor="addVendorInput" className="cursor-pointer"> Vendor</label>
                            </div>
                         </div>
 
                         <h2 className="m-2 mb-0 font-bold text-gray-500 w-full">Multiple Realated Input</h2>
-                        <div className="flex w-full">
-                           <div className="p-2">
-                              <input type="checkbox" name="addSizeInput" id="addSizeInput" onChange={event => handleSizeInput(event)} checked={isSize} />
-                              <label htmlFor="addSizeInput" className="cursor-pointer"> Size</label>
-                           </div>
 
-                           <div className="p-2">
-                              <input type="checkbox" name="addQuantityInput" id="addQuantityInput" onChange={event => handleQuantityInput(event)} checked={isQuantity} />
-                              <label htmlFor="addQuantityInput" className="cursor-pointer"> Quantity</label>
-                           </div>
-                           <div className="p-2">
-                              <input type="checkbox" name="addColorInput" id="addColorInput" onChange={event => handleColorInput(event)} checked={isColor} />
-                              <label htmlFor="addColorInput" className="cursor-pointer" > Color</label>
-                           </div>
-                        </div>
                      </div>
                      <div
                         className="modal-footer flex flex-shrink-0 flex-wrap items-center justify-end p-4 border-t border-gray-200 rounded-b-md">
-
-
                         <button type="button"
                            className="m-2 inline-block px-3 py-2 bg-teal-300 text-white leading-tight rounded shadow-md hover:bg-teal-400 hover:shadow-lg focus:bg-teal-400 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-teal-400 active:shadow-lg transition duration-150 ease-in-out"
                            data-bs-dismiss="modal" onClick={customInputs}>Apply</button>
@@ -482,7 +380,7 @@ function ProductForm() {
             </div>
             {/* modal end */}
 
-            <fieldset>
+            < fieldset >
                <legend>Quantity Details</legend>
                <input type="text"
                   placeholder="Total Quantity"
@@ -510,14 +408,14 @@ function ProductForm() {
                   className="w-6/12 shadow appearance-none border rounded my-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
                   value={formData.costPrice}
                   onChange={handleChange}
-                  placeholder={`Cost/${formData.quantityScale}`}
+                  placeholder={`Cost / ${formData.quantityScale}`}
                />
                <input type="text"
                   name="sellPrice"
                   className="w-6/12 shadow appearance-none border rounded my-2 py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
                   value={formData.sellPrice}
                   onChange={handleChange}
-                  placeholder={`Price/${formData.quantityScale}`}
+                  placeholder={`Price / ${formData.quantityScale}`}
                />
                <button className="bg-gray-700 hover:bg-blue-600 text-white font-semibold my-10 float-right py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={event => handleSubmit(event)}>Add to list</button>
             </fieldset>
