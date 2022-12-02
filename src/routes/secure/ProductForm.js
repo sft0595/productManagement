@@ -301,7 +301,7 @@ function ProductForm() {
                   {categoriesData.map(root => <option key={root.id} value={root.id}>{root.title}</option>)}
                </select>
             }
-            <a href="cc.cp" className=" link-primary">Add new category</a><br></br>
+            <a href="cc.cp" className="link-primary">Add new category</a><br></br>
             <hr></hr>
             <br></br>
 
